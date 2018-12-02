@@ -54,7 +54,7 @@ class MD5{
     public:
         string ciphertext = "";
         string encrypt(std::string plaintext);
-    //private:
+    private:
         // strByte的长度
         unsigned int strlength;
         // 四个临时变量
@@ -73,7 +73,7 @@ class MD5{
 
         void mainLoop(unsigned int M[]);
         //转换为16进制数 
-        string changeHex(int number);
+        string changeHex(long number);
 };
 
 #endif

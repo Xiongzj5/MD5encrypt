@@ -10,19 +10,22 @@ string MD5::encrypt(string plaintext){
     tempB = B;
     tempC = C;
     tempD = D;
-    unsigned int* fillResult = fillData(plaintext); // here we can get (N+1)*512 bits, equle to (N+1)*64 bytes
+    unsigned int* strByte = fillData(plaintext); // here we can get (N+1)*512 bits, equle to (N+1)*64 bytes
     // 先把(N+1)*512 bits 按照 512 bits一组来进行分组（也就是16个int一组）
     // 然后每一分组被划分为16个32位子分组
     // 一个int是4个字节，32个bit(位)
     // 所以说一个子分组被划分成16个32位子分组也就是16个int, 为16组
-    for(int i = 0;i < strlength / 16; ++i){ // 首先是按照512 bits来分组
+    for(unsigned int i = 0;i < strlength / 16; i++){ // 首先是按照512 bits来分组
         unsigned int num[16]; // 代表一个分组的16个int, 我们把这个分组的16个int给取出来
-        for(int j = 0;j < 16;++j){
-            num[j] = fillResult[i * 16 + j]; // i * 16 代表第几组， j 代表该组中的第几位
+        for(unsigned int j = 0;j < 16;j++){
+            num[j] = strByte[i * 16 + j]; // i * 16 代表第几组， j 代表该组中的第几位
         }
         mainLoop(num);
-        ciphertext += changeHex(tempA) + changeHex(tempB) + changeHex(C) + changeHex(D);
     }
+    ciphertext += changeHex(tempA);
+    ciphertext += changeHex(tempB);
+    ciphertext += changeHex(tempC);
+    ciphertext += changeHex(tempD);
     return ciphertext;
 }
 unsigned int* MD5::fillData(string initialtext){
@@ -34,7 +37,7 @@ unsigned int* MD5::fillData(string initialtext){
     unsigned int num = ((initialtext.length() + 8) / 64) + 1; // 这里num = N + 1
     unsigned int* strByte =  new unsigned int[num * 16];
     strlength = num * 16; // 这里我们可以确认填充后的字符串的int的位数
-    for(int i = 0; i < num * 16; ++i) { // 先全部设置为0
+    for(unsigned int i = 0; i < num * 16; i++) { // 先全部设置为0
         strByte[i] = 0;
     }
     // 因为strByte是unsigned int*的， 一个unsigned int 四个字节
@@ -42,14 +45,14 @@ unsigned int* MD5::fillData(string initialtext){
     // i >> 2代表的是 i / 4， 也就是找到字符所对应的unsigned int
     // (i % 4) * 8 就是找到这个字符在unsigned int中所对应的那个字节
     // 然后移位使得该字节移动到对应的字节上面去
-    for(int i=0; i < initialtext.length(); ++i){
+    for(unsigned int i = 0; i < initialtext.length(); i++){
         strByte[i >> 2] |= (initialtext[i]) << ((i % 4) * 8);
     }
     // 0x80是二进制的10000000，我们在原来字符串的后面接上一个10000000
     // 至于说后面还要跟多少个0，这我们就不用担心了
     // 因为前面我们在初始化strByte的时候，就已经决定了总长度并将每一位都初始化为0了
     // 所以我们只需要将该赋值的位赋值，其余的位就不需要我们管了
-    strByte[initialtext.length() >> 2] |= (0x80) << ((initialtext.length() % 4) * 8);
+    strByte[initialtext.length() >> 2] |= 0x80 << (((initialtext.length() % 4)) * 8);
     // 这里我们需要在填充字符串的末尾加上原字符串的长度的64位表达， 所以 * 8表示了位的长度
     // 这里只使用了32位，所以可能还存在一些问题，以后再说
     strByte[num * 16 - 2] = initialtext.length() * 8;
@@ -57,7 +60,6 @@ unsigned int* MD5::fillData(string initialtext){
 }
 
 void MD5::mainLoop(unsigned int M[]){
-    unsigned int f, g;
     unsigned a = tempA;
     unsigned b = tempB;
     unsigned c = tempC;
@@ -144,7 +146,7 @@ void MD5::mainLoop(unsigned int M[]){
     tempD = d + tempD;
 }
 //转换为16进制数 
-string MD5::changeHex(int number){
+string MD5::changeHex(long number){
     string str;
     int temp;
     while(number != 0){
